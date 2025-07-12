@@ -1,4 +1,4 @@
-# fintrack/app/models/alertas.py
+# finz/app/models/alertas.py
 from app.config.database import Base
 from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey
 from sqlalchemy.orm import relationship

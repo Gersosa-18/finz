@@ -1,4 +1,4 @@
-# fintrack/app/routers/usuarios.py
+# finz/app/routers/usuarios.py
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder

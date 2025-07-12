@@ -1,4 +1,4 @@
-# fintrack/config/database.py
+# finz/config/database.py
 from sqlalchemy import create_engine
 import os
 from sqlalchemy.orm import sessionmaker, declarative_base

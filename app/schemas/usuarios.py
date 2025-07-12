@@ -1,4 +1,4 @@
-# fintrack/app/schemas/usuarios.py
+# finz/app/schemas/usuarios.py
 from pydantic import BaseModel, Field, EmailStr
 from typing import Optional
 

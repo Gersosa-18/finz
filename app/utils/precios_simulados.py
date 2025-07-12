@@ -1,4 +1,4 @@
-# fintrack/utils/precios_simulados.py
+# finz/utils/precios_simulados.py
 PRECIOS_SIMULADOS = {
     "NVDA": {"precio": 129.5, "volumen": 1200000},
     "AAPL": {"precio": 189.75, "volumen": 980000},

@@ -1,4 +1,4 @@
-# fintrack/app/services/usuarios.py
+# finz/app/services/usuarios.py
 from sqlalchemy.orm import Session
 from app.models.usuarios import Usuarios as UsuariosModel
 from app.schemas.usuarios import UsuarioCreate

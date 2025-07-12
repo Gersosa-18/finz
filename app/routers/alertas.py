@@ -1,4 +1,4 @@
-# fintrack/app/routers/alertas.py
+# finz/app/routers/alertas.py
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder

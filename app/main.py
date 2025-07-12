@@ -6,7 +6,7 @@ from app.routers.usuarios import usuarios_router
 # from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
-app.title = "Alertas API"
+app.title = "Finz API"
 app.version = "1.0.0"
 
 app.add_middleware(

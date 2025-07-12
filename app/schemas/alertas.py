@@ -1,4 +1,4 @@
-# fintrack/app/schemas/alertas.py
+# finz/app/schemas/alertas.py
 from pydantic import BaseModel, Field
 from typing import Optional
 from enum import Enum
