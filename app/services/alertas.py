@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.models.alertas import Alertas as AlertasModel
-from app.schemas.alertas import AlertaCreate, TipoCondicionEnum
+from app.schemas.alertas import AlertaCreate
 from app.utils.precios_simulados import obtener_dato_simulado
 from fastapi import HTTPException
 from app.utils.analisis_sentimiento import analizar_sentimiento

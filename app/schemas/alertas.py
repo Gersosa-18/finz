@@ -1,23 +1,7 @@
 # finz/app/schemas/alertas.py
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
-from enum import Enum
-
-class CampoEnum(str, Enum):
-    PRECIO = "precio"
-    VOLUMEN = "volumen"
-
-class TipoCondicionEnum(str, Enum):
-    MAYOR_QUE = "mayor_que"
-    MENOR_QUE = "menor_que"
-    IGUAL_A = "igual_a"
-
-class TipoAlertaEnum(str, Enum):
-    SIMPLE = "simple"
-    RANGO = "rango"
-    PORCENTAJE = "porcentaje"
-    COMPUESTA = "compuesta"
-
+from app.enums.alertas import CampoEnum, TipoCondicionEnum, TipoAlertaEnum
 class CondicionCompuesta(BaseModel):
     campo: CampoEnum
     tipo_condicion: TipoCondicionEnum
