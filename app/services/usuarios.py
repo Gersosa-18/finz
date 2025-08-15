@@ -3,6 +3,9 @@ from sqlalchemy.orm import Session
 from app.models.usuarios import Usuarios as UsuariosModel
 from app.schemas.usuarios import UsuarioCreate
 from typing import List, Optional
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
 
 class UsuariosService:
     
@@ -14,27 +17,30 @@ class UsuariosService:
         # Verificar si el correo ya existe
         if self.verificar_correo_existe(usuario.correo):
             raise ValueError("El correo electrónico ya está registrado")
-        
-        nuevo_usuario = UsuariosModel(**usuario.model_dump())
+        contrasena_str = usuario.contrasena.get_secret_value()
+        hashed_password = pwd_context.hash(contrasena_str)
+
+        nuevo_usuario = UsuariosModel(
+            nombre=usuario.nombre,
+            correo=usuario.correo,
+            contrasena=hashed_password
+        )
         self.db.add(nuevo_usuario)
         self.db.commit()
         self.db.refresh(nuevo_usuario)
         return nuevo_usuario
     
     def obtener_todos_usuarios(self) -> List[UsuariosModel]:
-        """Obtener todos los usuarios"""
-        result = self.db.query(UsuariosModel).all()
-        return result
+        return self.db.query(UsuariosModel).all()
     
     def obtener_usuario_por_id(self, usuario_id: int) -> Optional[UsuariosModel]:
         """Obtener un usuario específico por ID"""
-        result = self.db.query(UsuariosModel).filter(UsuariosModel.id == usuario_id).first()
-        return result
+        return self.db.query(UsuariosModel).filter(UsuariosModel.id == usuario_id).first()
+        
     
     def obtener_usuario_por_correo(self, correo: str) -> Optional[UsuariosModel]:
         """Obtener un usuario por su correo electrónico"""
-        result = self.db.query(UsuariosModel).filter(UsuariosModel.correo == correo).first()
-        return result
+        return self.db.query(UsuariosModel).filter(UsuariosModel.correo == correo).first()
     
     def actualizar_usuario(self, usuario_id: int, usuario_data: UsuarioCreate) -> UsuariosModel:
         """Actualizar información de un usuario"""
@@ -52,6 +58,10 @@ class UsuariosService:
         usuario.nombre = usuario_data.nombre
         usuario.correo = usuario_data.correo
         
+        if usuario_data.contrasena:
+            contrasena_str = usuario_data.contrasena.get_secret_value()
+            usuario.contrasena = pwd_context.hash(contrasena_str)
+
         self.db.commit()
         self.db.refresh(usuario)
         return usuario
@@ -59,10 +69,8 @@ class UsuariosService:
     def eliminar_usuario(self, usuario_id: int) -> bool:
         """Eliminar un usuario"""
         usuario = self.db.query(UsuariosModel).filter(UsuariosModel.id == usuario_id).first()
-        
         if not usuario:
             raise ValueError("Usuario no encontrado")
-        
         self.db.delete(usuario)
         self.db.commit()
         return True
@@ -94,5 +102,8 @@ class UsuariosService:
     
     def obtener_usuarios_paginados(self, skip: int = 0, limit: int = 10) -> List[UsuariosModel]:
         """Obtener usuarios con paginación"""
-        result = self.db.query(UsuariosModel).offset(skip).limit(limit).all()
-        return result
+        return self.db.query(UsuariosModel).offset(skip).limit(limit).all()
+    
+    def verificar_password(self, plain_password: str, hashed_password: str) -> bool:
+        """Verifica que la contraseña en texto plano coincida con el hash guardado"""
+        return pwd_context.verify(plain_password, hashed_password)

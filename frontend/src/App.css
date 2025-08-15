@@ -1,0 +1,20 @@
+.app {
+  height: 100vh;
+}
+
+.app-body {
+  display: flex;
+  height: 100%;
+}
+
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  padding: 1rem 2rem 0;
+  background-color: #fefefe; /* Fondo blanco en vez de gris */
+}
