@@ -5,7 +5,7 @@ from app.schemas.usuarios import UsuarioCreate
 from typing import List, Optional
 from passlib.context import CryptContext
 
-pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class UsuariosService:
     
