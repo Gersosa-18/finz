@@ -14,8 +14,7 @@ def analizar_sentimiento(texto: str) -> str:
     try:
         # Traducir al inglés solo si el texto no parece estar en inglés
         texto = GoogleTranslator(source='auto', target='en').translate(texto)
-    except Exception as e:
-        print(f"⚠️ Error al traducir el texto: {e}")
+    except Exception:
         return 'neutral'
    
     try:
@@ -34,6 +33,5 @@ def analizar_sentimiento(texto: str) -> str:
         etiqueta = modelo.config.id2label[idx]
         mapeo = {'negative': 'negativo', 'neutral': 'neutral', 'positive': 'positivo'}
         return mapeo.get(etiqueta, 'neutral')
-    except Exception as e:
-        print(f"❌ Error al analizar el sentimiento: {e}")
+    except Exception:
         return 'neutral'
