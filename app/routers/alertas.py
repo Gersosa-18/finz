@@ -1,6 +1,5 @@
 # finz/app/routers/alertas.py
-from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.encoders import jsonable_encoder
 from typing import List
 from sqlalchemy.orm import Session

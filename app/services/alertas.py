@@ -2,7 +2,7 @@
 from sqlalchemy.orm import Session
 from app.models.alertas import AlertaSimple, AlertaRango, AlertaPorcentaje, AlertaCompuesta, CondicionAlerta
 from app.schemas.alertas import AlertaSimpleCreate, AlertaRangoCreate, AlertaPorcentajeCreate, AlertaCompuestaCreate
-from app.utils.precios_simulados import obtener_dato_simulado
+from app.services.precios_service import PreciosService
 from fastapi import HTTPException
 from app.utils.analisis_sentimiento import analizar_sentimiento
 from app.services.eventos_economicos import EventosEconomicosService
@@ -42,8 +42,11 @@ class AlertasService:
     def crear_alerta_porcentaje(self, alerta: AlertaPorcentajeCreate, user_id: int = 1):
         """Crear alerta de porcentaje"""
         # Obtener precio actual como referencia
-        precio_actual = obtener_dato_simulado(alerta.ticker, alerta.campo)
+        precio_actual = PreciosService.obtener_dato(alerta.ticker, alerta.campo)
         
+        if precio_actual is None:
+            raise HTTPException(status_code=404, detail=f"Ticker {alerta.ticker} no encontrado")
+
         new_alerta = AlertaPorcentaje(
             user_id=user_id,
             ticker=alerta.ticker,
@@ -151,7 +154,7 @@ class AlertasService:
 
     # ========== MÉTODOS PRIVADOS DE EVALUACIÓN ==========
     def _evaluar_alerta_simple(self, alerta, sentimiento):
-        valor_actual = obtener_dato_simulado(alerta.ticker, alerta.campo)
+        valor_actual = PreciosService.obtener_dato(alerta.ticker, alerta.campo)
         if valor_actual is None:
             return False
         
@@ -168,7 +171,7 @@ class AlertasService:
         return False
 
     def _evaluar_alerta_rango(self, alerta):
-        valor_actual = obtener_dato_simulado(alerta.ticker, alerta.campo)
+        valor_actual = PreciosService.obtener_dato(alerta.ticker, alerta.campo)
         if valor_actual is None:
             return False
         return alerta.valor_minimo <= valor_actual <= alerta.valor_maximo
@@ -176,7 +179,7 @@ class AlertasService:
     def _evaluar_alerta_porcentaje(self, alerta):
         if not alerta.precio_referencia:
             return False
-        valor_actual = obtener_dato_simulado(alerta.ticker, alerta.campo)
+        valor_actual = PreciosService.obtener_dato(alerta.ticker, alerta.campo)
         if valor_actual is None:
             return False
         
@@ -189,7 +192,7 @@ class AlertasService:
         
         resultados = []
         for condicion in alerta.condiciones:
-            valor_actual = obtener_dato_simulado(alerta.ticker, condicion.campo)
+            valor_actual = PreciosService.obtener_dato(alerta.ticker, condicion.campo)
             if valor_actual is None:
                 resultados.append(False)
                 continue
@@ -205,16 +208,24 @@ class AlertasService:
 
     # ========== GENERADORES DE MENSAJES ==========
     def _generar_mensaje_simple(self, alerta):
-        valor_actual = obtener_dato_simulado(alerta.ticker, alerta.campo)
+        valor_actual = PreciosService.obtener_dato(alerta.ticker, alerta.campo)
+        
+        if valor_actual is None:
+            return f"{alerta.ticker} {alerta.campo.value} - Precio no disponible"
+        
         simbolo = ">" if alerta.tipo_condicion.value == "mayor_que" else "<"
         return f"{alerta.ticker} {alerta.campo.value} (${valor_actual}) {simbolo} ${alerta.valor}"
 
     def _generar_mensaje_rango(self, alerta):
-        valor_actual = obtener_dato_simulado(alerta.ticker, alerta.campo)
+        valor_actual = PreciosService.obtener_dato(alerta.ticker, alerta.campo)
+        if valor_actual is None:
+            return f"{alerta.ticker} {alerta.campo.value} - Precio no disponible"
         return f"{alerta.ticker} {alerta.campo.value} (${valor_actual}) en rango ${alerta.valor_minimo}-${alerta.valor_maximo}"
 
     def _generar_mensaje_porcentaje(self, alerta):
-        valor_actual = obtener_dato_simulado(alerta.ticker, alerta.campo)
+        valor_actual = PreciosService.obtener_dato(alerta.ticker, alerta.campo)
+        if valor_actual is None:
+            return f"{alerta.ticker} {alerta.campo.value} - Precio no disponible"
         cambio = ((valor_actual - alerta.precio_referencia) / alerta.precio_referencia) * 100
         return f"{alerta.ticker} {alerta.campo.value} cambió {cambio:.1f}%"
 
