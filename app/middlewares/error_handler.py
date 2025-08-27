@@ -1,3 +1,4 @@
+# finz/app/middlewares/error_handler.py
 from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse
 

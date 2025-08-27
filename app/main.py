@@ -1,3 +1,4 @@
+# finz/app/main.py
 from fastapi import FastAPI
 from app.config.database import engine, Base
 from fastapi.middleware.cors import CORSMiddleware
