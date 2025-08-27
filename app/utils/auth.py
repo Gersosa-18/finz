@@ -1,3 +1,7 @@
+# finz/app/utils/auth.py
+from fastapi import Depends
+from fastapi.security import HTTPAuthorizationCredentials
+from app.middlewares.jwt_bearer import JWTBearer
 from datetime import datetime, timedelta, timezone
 import jwt
 import os
@@ -19,3 +23,10 @@ def crear_token_jwt(data: dict) -> str:
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+def get_current_user_id(
+        credentials: HTTPAuthorizationCredentials = Depends(JWTBearer())
+) -> int:
+    """Dependencia para obtener el user_id del token JWT"""
+    jwt_bearer = JWTBearer()
+    return jwt_bearer.get_user_id_from_token(credentials.credentials)

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.schemas.usuarios import Usuario, UsuarioCreate, UsuarioLogin
 from app.services.usuarios import UsuariosService
-from app.services.auth import crear_token_jwt
+from app.utils.auth import crear_token_jwt
 
 usuarios_router = APIRouter()
 

@@ -1,3 +1,4 @@
+# finz/app/middlewares/jwt_bearer.py
 from fastapi import Request, HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
@@ -39,3 +40,30 @@ class JWTBearer(HTTPBearer):
             return False
         except Exception:
             return False
+        
+    def get_user_id_from_token(self, token: str) -> int:
+        """Extraer el user_id del token JWT"""
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_id = payload.get("user_id")
+            if not user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Token no contiene user_id"
+                )
+            return int(user_id)
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token expirado"
+            )
+        except jwt.InvalidTokenError:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Token expirado"
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Error procesando token"
+            )
