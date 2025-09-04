@@ -4,7 +4,7 @@ from app.config.database import engine, Base
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers.alertas import alertas_router
 from app.routers.usuarios import usuarios_router
-from app.routers.eventos_economicos import eventos_router
+from app.routers.eventos import eventos_router
 # from fastapi.staticfiles import StaticFiles
 app = FastAPI()
 app.title = "Finz API"

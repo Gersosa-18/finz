@@ -5,7 +5,6 @@ from app.schemas.alertas import AlertaSimpleCreate, AlertaRangoCreate, AlertaPor
 from app.services.precios_service import PreciosService
 from fastapi import HTTPException
 from app.utils.analisis_sentimiento import analizar_sentimiento
-from app.services.eventos_economicos import EventosEconomicosService
 
 class AlertasService:
    
