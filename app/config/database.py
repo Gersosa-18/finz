@@ -12,10 +12,10 @@ if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL no está definida en las variables de entorno")
 
 engine = create_engine(
-    DATABASE_URL,
+    DATABASE_URL.replace("postgresql://", "postgresql+psycopg://"),
     pool_pre_ping=True,
     pool_recycle=300
-    )
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
