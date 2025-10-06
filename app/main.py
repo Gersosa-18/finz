@@ -36,7 +36,7 @@ app.add_exception_handler(
 )
 app.add_exception_handler(Exception, general_exception_handler)
 
-app.include_router(alertas_router)
+app.include_router(alertas_router, prefix="/alertas")
 app.include_router(usuarios_router)
 app.include_router(eventos_router)
 Base.metadata.create_all(bind=engine)

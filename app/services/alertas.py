@@ -110,6 +110,7 @@ class AlertasService:
     def evaluar_alertas(self, user_id: int, noticias_recientes: list[str] = None):
         """Evaluar todas las alertas activas de un usuario"""
         alertas_activadas = []
+        cache_precios = {}
         
         # Obtener todas las alertas activas
         alertas_simple = self.db.query(AlertaSimple).filter(AlertaSimple.user_id == user_id, AlertaSimple.activo == True).all()
@@ -128,22 +129,22 @@ class AlertasService:
             elif negativos > positivos:
                 sentimiento_general = 'negativo'
 
-        # Evaluar cada tipo de alerta
+        # Evaluar cada tipo de alerta con CACHE
         for alerta in alertas_simple:
-            if self._evaluar_alerta_simple(alerta, sentimiento_general):
-                alertas_activadas.append({"id": f"simple-{alerta.id}", "mensaje": self._generar_mensaje_simple(alerta)})
+            if self._evaluar_alerta_simple(alerta, sentimiento_general, cache_precios):
+                alertas_activadas.append({"id": f"simple-{alerta.id}", "mensaje": self._generar_mensaje_simple(alerta, cache_precios)})
 
         for alerta in alertas_rango:
-            if self._evaluar_alerta_rango(alerta):
-                alertas_activadas.append({"id": f"rango-{alerta.id}", "mensaje": self._generar_mensaje_rango(alerta)})
+            if self._evaluar_alerta_rango(alerta, cache_precios):
+                alertas_activadas.append({"id": f"rango-{alerta.id}", "mensaje": self._generar_mensaje_rango(alerta, cache_precios)})
 
         for alerta in alertas_porcentaje:
-            if self._evaluar_alerta_porcentaje(alerta):
-                alertas_activadas.append({"id": f"porcentaje-{alerta.id}", "mensaje": self._generar_mensaje_porcentaje(alerta)})
+            if self._evaluar_alerta_porcentaje(alerta, cache_precios):
+                alertas_activadas.append({"id": f"porcentaje-{alerta.id}", "mensaje": self._generar_mensaje_porcentaje(alerta, cache_precios)})
 
         for alerta in alertas_compuesta:
-            if self._evaluar_alerta_compuesta(alerta):
-                alertas_activadas.append({"id": f"compuesta-{alerta.id}", "mensaje": self._generar_mensaje_compuesta(alerta)})
+            if self._evaluar_alerta_compuesta(alerta, cache_precios):
+                alertas_activadas.append({"id": f"compuesta-{alerta.id}", "mensaje": self._generar_mensaje_compuesta(alerta, cache_precios)})
                 
         return {
             "alertas_evaluadas": len(alertas_simple) + len(alertas_rango) + len(alertas_porcentaje) + len(alertas_compuesta),
@@ -152,8 +153,12 @@ class AlertasService:
         }
 
     # ========== MÉTODOS PRIVADOS DE EVALUACIÓN ==========
-    def _evaluar_alerta_simple(self, alerta, sentimiento):
-        valor_actual = PreciosService.obtener_dato(alerta.ticker, alerta.campo)
+    def _evaluar_alerta_simple(self, alerta, sentimiento, cache_precios):
+        key = f"{alerta.ticker}_{alerta.campo.value}"
+        if key not in cache_precios:
+            cache_precios[key] = PreciosService.obtener_dato(alerta.ticker, alerta.campo)
+        
+        valor_actual = cache_precios[key]
         if valor_actual is None:
             return False
         
@@ -169,23 +174,30 @@ class AlertasService:
             return valor_actual < alerta.valor
         return False
 
-    def _evaluar_alerta_rango(self, alerta):
-        valor_actual = PreciosService.obtener_dato(alerta.ticker, alerta.campo)
+    def _evaluar_alerta_rango(self, alerta, cache_precios):
+        key = f"{alerta.ticker}_{alerta.campo.value}"
+        if key not in cache_precios:
+            cache_precios[key] = PreciosService.obtener_dato(alerta.ticker, alerta.campo)
+        valor_actual = cache_precios.get(key)
         if valor_actual is None:
             return False
         return alerta.valor_minimo <= valor_actual <= alerta.valor_maximo
 
-    def _evaluar_alerta_porcentaje(self, alerta):
+    def _evaluar_alerta_porcentaje(self, alerta, cache_precios):
+        key = f"{alerta.ticker}_{alerta.campo.value}"
+        if key not in cache_precios:
+            cache_precios[key] = PreciosService.obtener_dato(alerta.ticker, alerta.campo)
         if not alerta.precio_referencia:
             return False
-        valor_actual = PreciosService.obtener_dato(alerta.ticker, alerta.campo)
+        valor_actual = cache_precios.get(key)
         if valor_actual is None:
             return False
         
         cambio_porcentual = ((valor_actual - alerta.precio_referencia) / alerta.precio_referencia) * 100
         return abs(cambio_porcentual) >= abs(alerta.porcentaje_cambio)
 
-    def _evaluar_alerta_compuesta(self, alerta):
+    def _evaluar_alerta_compuesta(self, alerta, cache_precios):
+        key = f"{alerta.ticker}_{alerta.campo.value}"
         if not alerta.condiciones:
             return False
         
@@ -206,23 +218,26 @@ class AlertasService:
         return any(resultados) if alerta.operador_logico == "OR" else all(resultados)
 
     # ========== GENERADORES DE MENSAJES ==========
-    def _generar_mensaje_simple(self, alerta):
-        valor_actual = PreciosService.obtener_dato(alerta.ticker, alerta.campo)
-        
+    def _generar_mensaje_simple(self, alerta, cache_precios):
+        key = f"{alerta.ticker}_{alerta.campo.value}"
+        valor_actual = cache_precios.get(key)
+
         if valor_actual is None:
             return f"{alerta.ticker} {alerta.campo.value} - Precio no disponible"
         
         simbolo = ">" if alerta.tipo_condicion.value == "mayor_que" else "<"
         return f"{alerta.ticker} {alerta.campo.value} (${valor_actual}) {simbolo} ${alerta.valor}"
 
-    def _generar_mensaje_rango(self, alerta):
-        valor_actual = PreciosService.obtener_dato(alerta.ticker, alerta.campo)
+    def _generar_mensaje_rango(self, alerta, cache_precios):
+        key = f"{alerta.ticker}_{alerta.campo.value}"
+        valor_actual = cache_precios.get(key)
         if valor_actual is None:
             return f"{alerta.ticker} {alerta.campo.value} - Precio no disponible"
         return f"{alerta.ticker} {alerta.campo.value} (${valor_actual}) en rango ${alerta.valor_minimo}-${alerta.valor_maximo}"
 
-    def _generar_mensaje_porcentaje(self, alerta):
-        valor_actual = PreciosService.obtener_dato(alerta.ticker, alerta.campo)
+    def _generar_mensaje_porcentaje(self, alerta, cache_precios):
+        key = f"{alerta.ticker}_{alerta.campo.value}"
+        valor_actual = cache_precios.get(key)
         if valor_actual is None:
             return f"{alerta.ticker} {alerta.campo.value} - Precio no disponible"
         cambio = ((valor_actual - alerta.precio_referencia) / alerta.precio_referencia) * 100
