@@ -8,14 +8,14 @@ class UsuarioBase(BaseModel):
 class UsuarioCreate(UsuarioBase):
     nombre: str = Field(..., min_length=2, max_length=50)
     correo: EmailStr = Field(..., max_length=100)
-    contrasena: SecretStr = Field(..., min_length=6, max_length=100)
+    contrasena: SecretStr = Field(..., min_length=6, max_length=72)
 
 class UsuarioLogin(BaseModel):
     correo: EmailStr = Field(..., max_length=100)
-    contrasena: SecretStr = Field(..., min_length=6, max_length=100)
+    contrasena: SecretStr = Field(..., min_length=6, max_length=72)
 
 class UsuarioUpdate(UsuarioBase):
-    contrasena: Optional[SecretStr] = Field(None, min_length=6, max_length=100)
+    contrasena: Optional[SecretStr] = Field(None, min_length=6, max_length=72)
 
 class Usuario(UsuarioBase):
     id: int

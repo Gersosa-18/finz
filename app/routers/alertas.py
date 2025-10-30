@@ -13,7 +13,7 @@ from app.schemas.alertas import (
 )
 from app.services.alertas import AlertasService
 from app.utils.auth import get_current_user_id
-from app.utils.analisis_sentimiento import analizar_sentimiento
+# from app.utils.analisis_sentimiento import analizar_sentimiento
 
 alertas_router = APIRouter()
 

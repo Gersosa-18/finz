@@ -4,7 +4,7 @@ from app.models.alertas import AlertaSimple, AlertaRango, AlertaPorcentaje, Aler
 from app.schemas.alertas import AlertaSimpleCreate, AlertaRangoCreate, AlertaPorcentajeCreate, AlertaCompuestaCreate
 from app.services.precios_service import PreciosService
 from fastapi import HTTPException
-from app.utils.analisis_sentimiento import analizar_sentimiento
+# from app.utils.analisis_sentimiento import analizar_sentimiento
 
 class AlertasService:
    
