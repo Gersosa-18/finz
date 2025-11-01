@@ -5,7 +5,7 @@
 ## Funcionalidades actuales
 
 - ✅ Alertas personalizadas básicas y avanzadas
-- ✅ Análisis de sentimiento financiero multilenguaje (FinBERT + traducción automática)
+- 🚧 Análisis de sentimiento (futuro - actualmente deshabilitado)
 - 🚧 En desarrollo:
   - Eventos macroeconómicos
   - Chatbot financiero simple
@@ -28,3 +28,4 @@ source venv/bin/activate  # en Windows: venv\Scripts\activate
 
 # Instalar dependencias
 pip install -r requirements.txt
+```
