@@ -9,4 +9,4 @@ class Usuarios(Base):
     id = Column(Integer, primary_key = True)
     nombre= Column(String(25))
     correo= Column(String(100))
-    contrasena= Column(String(100))
+    contrasena= Column(String(255))

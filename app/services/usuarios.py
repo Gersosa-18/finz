@@ -14,10 +14,10 @@ class UsuariosService:
     
     def crear_usuario(self, usuario: UsuarioCreate) -> UsuariosModel:
         """Crear un nuevo usuario en la base de datos"""
-        # Verificar si el correo ya existe
         if self.verificar_correo_existe(usuario.correo):
             raise ValueError("El correo electrónico ya está registrado")
         contrasena_str = usuario.contrasena.get_secret_value()
+        contrasena_str = contrasena_str[:72]
         hashed_password = pwd_context.hash(contrasena_str)
 
         nuevo_usuario = UsuariosModel(
@@ -60,6 +60,7 @@ class UsuariosService:
         
         if usuario_data.contrasena:
             contrasena_str = usuario_data.contrasena.get_secret_value()
+            contrasena_str = contrasena_str[:72]
             usuario.contrasena = pwd_context.hash(contrasena_str)
 
         self.db.commit()
@@ -106,4 +107,5 @@ class UsuariosService:
     
     def verificar_password(self, plain_password: str, hashed_password: str) -> bool:
         """Verifica que la contraseña en texto plano coincida con el hash guardado"""
+        plain_password = plain_password[:72]
         return pwd_context.verify(plain_password, hashed_password)
