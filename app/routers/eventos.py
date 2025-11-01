@@ -22,15 +22,15 @@ def mis_eventos(
     return get_eventos_usuario(db, user_id)
 
 
-@eventos_router.post("/sincronizar", dependencies=[Depends(JWTBearer())])
-def sincronizar(db: Session = Depends(get_db)):
-    """Sync: Solo Finnhub (micro) por ahora"""
-    finnhub_key = os.getenv("FINNHUB_API_KEY")
-    if not finnhub_key:
-        raise HTTPException(400, "Falta API key: FINNHUB_API_KEY")
+# @eventos_router.post("/sincronizar", dependencies=[Depends(JWTBearer())])
+# def sincronizar(db: Session = Depends(get_db)):
+#     """Sync: Solo Finnhub (micro) por ahora"""
+#     finnhub_key = os.getenv("FINNHUB_API_KEY")
+#     if not finnhub_key:
+#         raise HTTPException(400, "Falta API key: FINNHUB_API_KEY")
 
-    micro = sincronizar_earnings_finnhub(db, finnhub_key)
-    return {"eventos_micro": micro, "eventos_macro": "Deshabilitado"}
+#     micro = sincronizar_earnings_finnhub(db, finnhub_key)
+#     return {"eventos_micro": micro, "eventos_macro": "Deshabilitado"}
 
 
 # @eventos_router.get("/debug")

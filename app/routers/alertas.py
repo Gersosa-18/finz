@@ -13,7 +13,6 @@ from app.schemas.alertas import (
 )
 from app.services.alertas import AlertasService
 from app.utils.auth import get_current_user_id
-# from app.utils.analisis_sentimiento import analizar_sentimiento
 
 alertas_router = APIRouter()
 
@@ -69,18 +68,6 @@ def get_alerta_por_id(alerta_id: int, user_id: int = Depends(get_current_user_id
         raise HTTPException(status_code=404, detail="Alerta no encontrada")
     return jsonable_encoder(result)
 
-# Endpoints de evaluación
-
-@alertas_router.post('/evaluar-con-sentimiento', tags=['Testing'])
-def post_evaluar_con_sentimiento(
-    noticias: List[str],
-    user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
-    """Evaluar alertas con análisis de sentimiento"""
-    result = AlertasService(db).evaluar_alertas(user_id, noticias)
-    return result
-
 # Endpoints de gestión
 @alertas_router.put('/{alerta_id}/desactivar', tags=['Alertas'])
 def put_desactivar_alerta(alerta_id: int, user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
@@ -105,39 +92,3 @@ def delete_alerta(alerta_id: int, user_id: int = Depends(get_current_user_id), d
     if success:
         return {"message": "Alerta eliminada correctamente"}
     return {"message": "Alerta no encontrada"}
-
-# Endpoints de testing
-@alertas_router.post('/test/sentiment', tags=['Testing'])
-def test_sentiment_analysis(noticias: List[str]):
-    """Endpoint para testear solo análisis de sentimiento"""
-    resultados = []
-    for noticia in noticias:
-        sentimiento = analizar_sentimiento(noticia)
-        resultados.append({
-            "texto": noticia,
-            "sentimiento": sentimiento
-        })
-    
-    # Calcular sentimiento general
-    sentimientos = [r["sentimiento"] for r in resultados]
-    positivos = sentimientos.count("positivo")
-    negativos = sentimientos.count("negativo")
-    neutral = sentimientos.count("neutral")
-
-    if positivos > negativos:
-        general = "positivo"
-    elif negativos > positivos:
-        general = "negativo"
-    else:
-        general = "neutral"
-    
-    return {
-        "analisis_individual": resultados,
-        "sentimiento_general": general,
-        "resumen": {
-            "positivos": positivos,
-            "negativos": negativos,
-            "neutros": neutral,
-            "total": len(noticias)
-        }
-    }
