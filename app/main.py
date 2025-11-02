@@ -10,7 +10,9 @@ from app.middlewares.error_handler import (
     http_exception_handler,
     general_exception_handler,
 )
+import os
 
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 app = FastAPI()
 app.title = "Finz API"
 app.version = "1.0.0"
@@ -18,9 +20,9 @@ app.version = "1.0.0"
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[FRONTEND_URL],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
 
