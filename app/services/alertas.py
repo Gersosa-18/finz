@@ -120,14 +120,14 @@ class AlertasService:
 
         # Análisis de sentimiento
         sentimiento_general = 'neutral'
-        if noticias_recientes:
-            sentimientos = [analizar_sentimiento(noticia) for noticia in noticias_recientes]
-            positivos = sentimientos.count("positivo")
-            negativos = sentimientos.count("negativo")
-            if positivos > negativos:
-                sentimiento_general = 'positivo'
-            elif negativos > positivos:
-                sentimiento_general = 'negativo'
+        # if noticias_recientes:
+        #     sentimientos = [analizar_sentimiento(noticia) for noticia in noticias_recientes]
+        #     positivos = sentimientos.count("positivo")
+        #     negativos = sentimientos.count("negativo")
+        #     if positivos > negativos:
+        #         sentimiento_general = 'positivo'
+        #     elif negativos > positivos:
+        #         sentimiento_general = 'negativo'
 
         # Evaluar cada tipo de alerta con CACHE
         for alerta in alertas_simple:
