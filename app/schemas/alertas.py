@@ -13,7 +13,7 @@ class AlertaSimpleCreate(BaseModel):
    
     @field_validator('ticker')
     def ticker_uppercase(cls, v):
-        return v.upper()
+        return v.strip().upper()
 
 class AlertaSimple(AlertaSimpleCreate):
     id: int
@@ -33,7 +33,7 @@ class AlertaRangoCreate(BaseModel):
    
     @field_validator('ticker')
     def ticker_uppercase(cls, v):
-        return v.upper()
+        return v.strip().upper()
    
     @field_validator('valor_maximo')
     def validar_rango(cls, v, info):
@@ -59,7 +59,7 @@ class AlertaPorcentajeCreate(BaseModel):
    
     @field_validator('ticker')
     def ticker_uppercase(cls, v):
-        return v.upper()
+        return v.strip().upper()
 
 class AlertaPorcentaje(AlertaPorcentajeCreate):
     id: int
@@ -93,7 +93,7 @@ class AlertaCompuestaCreate(BaseModel):
    
     @field_validator('ticker')
     def ticker_uppercase(cls, v):
-        return v.upper()
+        return v.strip().upper()
 
 class AlertaCompuesta(BaseModel):
     id: int
