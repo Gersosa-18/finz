@@ -137,21 +137,35 @@ class AlertasService:
 
         # Evaluar cada tipo de alerta con CACHE
         for alerta in alertas_simple:
+            if alerta.activada_at:
+                continue
             if self._evaluar_alerta_simple(alerta, sentimiento_general, cache_precios):
                 alertas_activadas.append({"id": f"simple-{alerta.id}", "mensaje": self._generar_mensaje_simple(alerta, cache_precios)})
+                alerta.activada_at = datetime.now()
 
         for alerta in alertas_rango:
+            if alerta.activada_at:
+                continue
             if self._evaluar_alerta_rango(alerta, cache_precios):
                 alertas_activadas.append({"id": f"rango-{alerta.id}", "mensaje": self._generar_mensaje_rango(alerta, cache_precios)})
+                alerta.activada_at = datetime.now()
 
         for alerta in alertas_porcentaje:
+            if alerta.activada_at:
+                continue
             if self._evaluar_alerta_porcentaje(alerta, cache_precios):
                 alertas_activadas.append({"id": f"porcentaje-{alerta.id}", "mensaje": self._generar_mensaje_porcentaje(alerta, cache_precios)})
+                alerta.activada_at = datetime.now()
 
         for alerta in alertas_compuesta:
+            if alerta.activada_at:
+                continue
             if self._evaluar_alerta_compuesta(alerta, cache_precios):
                 alertas_activadas.append({"id": f"compuesta-{alerta.id}", "mensaje": self._generar_mensaje_compuesta(alerta, cache_precios)})
-        
+                alerta.activada_at = datetime.now()
+            
+        self.db.commit()
+
         if alertas_activadas:
             ahora = datetime.now()
             ultima = self._ultima_notif.get(user_id)

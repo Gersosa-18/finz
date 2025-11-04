@@ -13,6 +13,7 @@ class AlertaBase(Base):
     user_id = Column(Integer, ForeignKey('usuarios.id'), nullable=False)
     ticker = Column(String(10), nullable =False)
     activo = Column(Boolean, default=True)
+    activada_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
