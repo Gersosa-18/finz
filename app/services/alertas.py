@@ -5,7 +5,10 @@ from app.schemas.alertas import AlertaSimpleCreate, AlertaRangoCreate, AlertaPor
 from app.services.precios_service import PreciosService
 from fastapi import HTTPException
 # from app.utils.analisis_sentimiento import analizar_sentimiento
-
+from app.models.notificaciones import Suscripcion
+from pywebpush import webpush
+import json
+import os
 class AlertasService:
    
     def __init__(self, db: Session) -> None:
@@ -145,7 +148,26 @@ class AlertasService:
         for alerta in alertas_compuesta:
             if self._evaluar_alerta_compuesta(alerta, cache_precios):
                 alertas_activadas.append({"id": f"compuesta-{alerta.id}", "mensaje": self._generar_mensaje_compuesta(alerta, cache_precios)})
+        
+        if alertas_activadas:
+            try:
+                suscripcion = self.db.query(Suscripcion).filter(
+                    Suscripcion.user_id == user_id
+                ).first()
                 
+                if suscripcion:
+                    webpush(
+                        subscription_info=suscripcion.subscription_data,
+                        data=json.dumps({
+                            "title": "🔔 Finz Alert", 
+                            "body": f"{len(alertas_activadas)} alerta(s) activada(s)"
+                        }),
+                        vapid_private_key=os.getenv("VAPID_PRIVATE_KEY"),
+                        vapid_claims={"sub": f"mailto:{os.getenv('VAPID_EMAIL')}"}
+                    )
+            except Exception as e:
+                print(f"Error enviando push: {e}")
+
         return {
             "alertas_evaluadas": len(alertas_simple) + len(alertas_rango) + len(alertas_porcentaje) + len(alertas_compuesta),
             "alertas_activadas": alertas_activadas,
