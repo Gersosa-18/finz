@@ -9,7 +9,10 @@ from app.models.notificaciones import Suscripcion
 from pywebpush import webpush
 import json
 import os
+from datetime import datetime, timedelta
+
 class AlertasService:
+    _ultima_notif = {}
    
     def __init__(self, db: Session) -> None:
         self.db = db
@@ -150,23 +153,28 @@ class AlertasService:
                 alertas_activadas.append({"id": f"compuesta-{alerta.id}", "mensaje": self._generar_mensaje_compuesta(alerta, cache_precios)})
         
         if alertas_activadas:
-            try:
-                suscripcion = self.db.query(Suscripcion).filter(
-                    Suscripcion.user_id == user_id
-                ).first()
-                
-                if suscripcion:
-                    webpush(
-                        subscription_info=suscripcion.subscription_data,
-                        data=json.dumps({
-                            "title": "🔔 Finz Alert", 
-                            "body": f"{len(alertas_activadas)} alerta(s) activada(s)"
-                        }),
-                        vapid_private_key=os.getenv("VAPID_PRIVATE_KEY"),
-                        vapid_claims={"sub": f"mailto:{os.getenv('VAPID_EMAIL')}"}
-                    )
-            except Exception as e:
-                print(f"Error enviando push: {e}")
+            ahora = datetime.now()
+            ultima = self._ultima_notif.get(user_id)
+            
+            if not ultima or (ahora - ultima) > timedelta(minutes=5):
+                try:
+                    suscripcion = self.db.query(Suscripcion).filter(
+                        Suscripcion.user_id == user_id
+                    ).first()
+                    
+                    if suscripcion:
+                        webpush(
+                            subscription_info=suscripcion.subscription_data,
+                            data=json.dumps({
+                                "title": "🔔 Finz Alert", 
+                                "body": f"{len(alertas_activadas)} alerta(s) activada(s)"
+                            }),
+                            vapid_private_key=os.getenv("VAPID_PRIVATE_KEY"),
+                            vapid_claims={"sub": f"mailto:{os.getenv('VAPID_EMAIL')}"}
+                        )
+                        self._ultima_notif[user_id] = ahora
+                except Exception as e:
+                    print(f"Error enviando push: {e}")
 
         return {
             "alertas_evaluadas": len(alertas_simple) + len(alertas_rango) + len(alertas_porcentaje) + len(alertas_compuesta),
