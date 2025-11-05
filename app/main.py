@@ -11,6 +11,7 @@ from app.middlewares.error_handler import (
     http_exception_handler,
     general_exception_handler,
 )
+from app.scheduler import scheduler
 import os
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
@@ -47,9 +48,15 @@ app.include_router(notificaciones_router)
 
 @app.on_event("startup")
 async def startup_event():
-    """Crear tablas solo cuando la app inicia, no al importar"""
     from app.config.database import engine, Base
     Base.metadata.create_all(bind=engine)
+    scheduler.start()
+    print("🚀 Scheduler de alertas iniciado")
+
+@app.on_event("shutdown") 
+async def shutdown_event():
+    scheduler.shutdown()
+    print("🛑 Scheduler detenido")
 
 @app.get("/")
 async def root():
