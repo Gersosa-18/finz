@@ -189,11 +189,15 @@ class AlertasService:
                     ).first()
                     
                     if suscripcion:
+                        # Enviar notificación con el detalle de TODAS las alertas
+                        mensajes = [a["mensaje"] for a in alertas_activadas]
+                        body = "\n".join(mensajes) if len(mensajes) <= 3 else f"{mensajes[0]}\n... y {len(mensajes)-1} más"
+                        
                         webpush(
                             subscription_info=suscripcion.subscription_data,
                             data=json.dumps({
-                                "title": "🔔 Finz Alert", 
-                                "body": f"{len(alertas_activadas)} alerta(s) activada(s)"
+                                "title": f"🔔 {len(alertas_activadas)} Alerta(s) Activada(s)", 
+                                "body": body
                             }),
                             vapid_private_key=os.getenv("VAPID_PRIVATE_KEY"),
                             vapid_claims={"sub": f"mailto:{os.getenv('VAPID_EMAIL')}"}
