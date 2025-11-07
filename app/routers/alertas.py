@@ -13,6 +13,7 @@ from app.schemas.alertas import (
 )
 from app.services.alertas import AlertasService
 from app.utils.auth import get_current_user_id
+from app.middlewares.jwt_bearer import JWTBearer
 
 alertas_router = APIRouter()
 
@@ -46,6 +47,25 @@ def post_crear_alerta_compuesta(alerta: AlertaCompuestaCreate, user_id: int = De
     return {"message": "Alerta compuesta creada correctamente"}
 
 # Endpoints de consultas
+@alertas_router.get('/tickers-seguimiento', tags=['Alertas'])
+def get_tickers_seguimiento(user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
+    """Tickers del usuario con precios"""
+    import yfinance as yf
+
+    alertas = AlertasService(db).obtener_alertas_usuario(user_id)
+    tickers = {a.ticker for alertas_tipo in alertas.values() for a in alertas_tipo if a.activo}
+
+    resultado = []
+    for t in tickers:
+        try:
+            info = yf.Ticker(t).info
+            precio = info.get("currentPrice") or info.get("regularMarketPrice")
+            cambio = info.get("regularMarketChangePercent", 0)
+            resultado.append({"symbol": t, "price": round(precio, 2), "change": round(cambio, 2)})
+        except:
+            continue
+    return {"tickers": resultado}
+
 @alertas_router.get('/mis-alertas', tags=['Alertas'])
 def get_mis_alertas(user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """Obtener las alertas del usuario autenticado"""
