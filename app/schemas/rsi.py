@@ -33,3 +33,4 @@ class RSIConEstado(BaseModel):
     signal: str | None | None
     proxima_actualizacion: str
     tiene_datos: bool
+    es_dato_en_vivo: bool

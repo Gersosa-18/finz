@@ -117,7 +117,7 @@ class RSIService:
         .all()
     
     @staticmethod
-    def obtener_rsi_con_estado(db: Session, ticker: str, max_age_minutes: int = 10):
+    def obtener_rsi_con_estado(db: Session, ticker: str):
         """Obtiene RSI desde BD con información de próxima actualización"""
         ticker = ticker.upper()
 
@@ -131,16 +131,18 @@ class RSIService:
         proxima_actualizacion = RSIService._calcular_proxima_actualizacion()
 
         if ultimo_registro:
+
             edad = datetime.now() - ultimo_registro.timestamp
-            tiene_datos_frescos = edad < timedelta(minutes=max_age_minutes)
+            es_dato_en_vivo = edad < timedelta(minutes=15)
 
             return {
                 "ticker": ticker,
-                "rsi_value": ultimo_registro.rsi_value if tiene_datos_frescos else None,
-                "timestamp": ultimo_registro.timestamp if tiene_datos_frescos else None,
-                "signal": RSIService._determinar_signal(ultimo_registro.rsi_value) if tiene_datos_frescos else None,
+                "rsi_value": ultimo_registro.rsi_value,
+                "timestamp": ultimo_registro.timestamp,
+                "signal": RSIService._determinar_signal(ultimo_registro.rsi_value),
                 "proxima_actualizacion": proxima_actualizacion,
-                "tiene_datos": tiene_datos_frescos
+                "tiene_datos": True,
+                "es_dato_en_vivo": es_dato_en_vivo
             }
         else:
             return {
@@ -149,7 +151,8 @@ class RSIService:
                 "timestamp": None,
                 "signal": None,
                 "proxima_actualizacion": proxima_actualizacion,
-                "tiene_datos": False
+                "tiene_datos": False,
+                "es_dato_en_vivo": False
             }
         
     @staticmethod
