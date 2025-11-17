@@ -1,5 +1,6 @@
 # finz/app/routers/usuarios.py
 from fastapi import APIRouter, Body, Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials
 from app.middlewares.jwt_bearer import JWTBearer
 from typing import List
 from sqlalchemy.orm import Session
@@ -9,6 +10,12 @@ from app.services.usuarios import UsuariosService
 from app.utils.auth import (crear_token_jwt, crear_refresh_token, verificar_refresh_token)
 
 usuarios_router = APIRouter()
+
+@usuarios_router.get('/auth/hearbeat', tags=['Usuarios'])
+def hearbeat(credentials: HTTPAuthorizationCredentials = Depends(JWTBearer())):
+    """Validar sesión activa"""
+    return {"status": "ok"}
+
 
 @usuarios_router.post('/login', tags=['Usuarios'])
 def login(usuario_login: UsuarioLogin, db: Session = Depends(get_db)):
