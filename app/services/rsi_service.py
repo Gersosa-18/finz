@@ -29,9 +29,15 @@ class RSIService:
                 raise HTTPException(503, f"Error TwelveData: {response.status_code}")
             
             data = response.json()
+            values = data.get("values")
+            if not values:
+                raise HTTPException(
+                    503,
+                    f"TwelveData no devolvío valores para {ticker}: {data}"
+                )
 
             # Último valor RSI
-            ultimo = data["values"][0]
+            ultimo = values[0]
             rsi_value = float(ultimo["rsi"])
 
             return {
