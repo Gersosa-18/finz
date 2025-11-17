@@ -11,8 +11,8 @@ from app.utils.auth import (crear_token_jwt, crear_refresh_token, verificar_refr
 
 usuarios_router = APIRouter()
 
-@usuarios_router.get('/auth/hearbeat', tags=['Usuarios'])
-def hearbeat(credentials: HTTPAuthorizationCredentials = Depends(JWTBearer())):
+@usuarios_router.get('/auth/heartbeat', tags=['Usuarios'])
+def heartbeat(credentials: HTTPAuthorizationCredentials = Depends(JWTBearer())):
     """Validar sesión activa"""
     return {"status": "ok"}
 
