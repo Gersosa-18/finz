@@ -1,11 +1,54 @@
 import requests
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from app.models.rsi import RSI
+from sqlalchemy import func, text
+from app.models.rsi import RSI, SeguimientoRSI # Asegurando imports
+# Asumiendo que el archivo de modelos rsi.py ya tiene la clase SeguimientoRSI
 
 class RSIService:
+    
+    # --- MÉTODOS DE OPTIMIZACIÓN DE RATE LIMIT ---
+    
+    @staticmethod
+    def obtener_conteo_uso_hoy(db: Session) -> int:
+        """Cuenta cuántas peticiones exitosas (guardadas en RSI history) hicimos hoy."""
+        # Se asume que cada registro exitoso en RSI history es una petición a la API
+        hoy = datetime.now().date()
+        # Filtramos por la fecha de la columna timestamp
+        return db.query(RSI).filter(func.date(RSI.timestamp) == hoy).count()
+
+    @staticmethod
+    def obtener_candidatos_actualizacion(db: Session, limite: int) -> list[str]:
+        """
+        Estrategia LRU (Least Recently Used):
+        Devuelve los 'limite' tickers seguidos, ordenados por su última actualización 
+        (los más viejos o los que nunca se han actualizado, primero).
+        """
+        # Consulta SQL optimizada:
+        # 1. LEFT JOIN: Une los tickers seguidos (SeguimientoRSI) con la última fecha de RSI (MAX(timestamp)).
+        # 2. ORDER BY ... ASC NULLS FIRST: Ordena de la fecha más antigua a la más reciente. Los tickers 
+        #    que no tienen registro (NULL) van primero, asegurando que se actualicen inmediatamente.
+        sql_query = text("""
+            SELECT s.ticker
+            FROM seguimiento_rsi s
+            LEFT JOIN (
+                SELECT ticker, MAX(timestamp) as last_update
+                FROM rsi_history
+                GROUP BY ticker
+            ) r ON s.ticker = r.ticker
+            ORDER BY r.last_update ASC NULLS FIRST
+            LIMIT :limite
+        """)
+        
+        # Ejecutar la consulta
+        result = db.execute(sql_query, {"limite": limite}).fetchall()
+        
+        # Extraer el ticker del resultado (solo la primera columna [0])
+        return [row[0] for row in result]
+
+    # --- MÉTODOS EXISTENTES ---
 
     @staticmethod
     def obtener_rsi_actual(ticker: str) -> dict:
@@ -26,7 +69,9 @@ class RSIService:
             response = requests.get(url, params=params, timeout=10)
 
             if response.status_code != 200:
-                raise HTTPException(503, f"Error TwelveData: {response.status_code}")
+                # TwelveData devuelve mensajes de error útiles en el JSON
+                error_msg = response.json().get("message", f"Error TwelveData: {response.status_code}")
+                raise HTTPException(503, error_msg)
             
             data = response.json()
             values = data.get("values")
@@ -53,14 +98,14 @@ class RSIService:
     @staticmethod
     def _determinar_signal(rsi_value: float) -> str:
         """Determina la señal del rsi"""
-        if rsi_value > 70:
+        if rsi_value >= 70:
             return "sobrecompra"
         elif rsi_value > 60:
             return "acercandose a sobrecompra"
+        elif rsi_value <= 30:
+            return "sobreventa"
         elif rsi_value < 40:
             return "acercandose a sobreventa"
-        elif rsi_value < 30:
-            return "sobreventa"
         else:
             return "neutral"
 
@@ -75,7 +120,6 @@ class RSIService:
     @staticmethod
     def agregar_seguimiento(db: Session, user_id: int, ticker: str):
         """Agregar ticker a seguimiento del usuario"""
-        from app.models.rsi import SeguimientoRSI
         
         ticker = ticker.upper()
 
@@ -97,14 +141,13 @@ class RSIService:
     @staticmethod
     def eliminar_seguimiento(db: Session, user_id: int, ticker: str):
         """Eliminar ticker de seguimientos"""
-        from app.models.rsi import SeguimientoRSI
 
         ticker = ticker.upper()
 
         seguimiento = db.query(SeguimientoRSI)\
         .filter(SeguimientoRSI.user_id == user_id)\
-            .filter(SeguimientoRSI.ticker == ticker)\
-            .first()
+        .filter(SeguimientoRSI.ticker == ticker)\
+        .first()
         
         if not seguimiento:
             raise HTTPException(404, f"No estás siguiendo {ticker}")
@@ -116,7 +159,6 @@ class RSIService:
     @staticmethod
     def obtener_seguimientos(db: Session, user_id: int):
         """Obtener todos los tickers de el usuario"""
-        from app.models.rsi import SeguimientoRSI
 
         return db.query(SeguimientoRSI)\
         .filter(SeguimientoRSI.user_id == user_id)\
@@ -184,18 +226,20 @@ class RSIService:
             return f"Mercado cerrado - abre a las {hora_apertura.strftime('%H:%M')}"
         
         # Después de apertura
-        if ahora > hora_cierre:
+        if ahora >= hora_cierre:
+            # Si ya es 18:00:00 o más tarde
             proxima = (ahora + timedelta(days=1)).replace(hour=11, minute=30)
+            # Ajustar al próximo lunes si es viernes
+            if ahora.weekday() == 4: # Viernes
+                 proxima = (ahora + timedelta(days=3)).replace(hour=11, minute=30)
             return f"Mercado cerrado - próxima: {proxima.strftime('%d/%m %H:%M')}"
         
-        minutos_hasta_proxima = 10 - (ahora.minute % 10)
-        proxima = ahora + timedelta(minutes=minutos_hasta_proxima)
-        return f"{proxima.strftime('%H:%M')} (en {minutos_hasta_proxima} min)"
-    
+        # Durante horario de mercado, la próxima es en el próximo minuto.
+        return f"Actualización continua (cada 1 min)"
+
     @staticmethod
     def obtener_todos_los_tickers_seguidos(db: Session):
-        """Lista única de tickers que algún usuario sigue"""
-        from app.models.rsi import SeguimientoRSI
+        """Lista única de tickers que algún usuario sigue (Método obsoleto en el nuevo job inteligente)"""
 
         result = db.query(SeguimientoRSI.ticker)\
             .distinct()\

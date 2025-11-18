@@ -62,3 +62,20 @@ def get_rsi(
 ):
     """Obtener RSI de un ticker especifico (desde BD)"""
     return RSIService.obtener_rsi_con_estado(db, ticker)
+
+@rsi_router.post("/forzar-actualizacion")
+def forzar_actualizacion(
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
+    """Forzar actualización RSI (ignora horario)"""
+    seguimientos = RSIService.obtener_seguimientos(db, user_id)
+
+    for seg in seguimientos:
+        try:
+            result = RSIService.obtener_rsi_actual(seg.ticker)
+            RSIService.guardar_rsi(db, result["ticker"], result["rsi_value"])
+        except:
+            pass
+    
+    return {"ok": True}
