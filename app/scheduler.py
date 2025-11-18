@@ -77,7 +77,7 @@ def actualizar_rsi_inteligente():
             print("💤 No hay tickers seguidos para actualizar.")
             return
         
-        print(f"🔄 Actualizando {len(candidatos)} tickers más 'hambrientos'.")
+        print(f"🔄 Actualizando {len(candidatos)} tickers'.")
 
         # 5. Ejecutar Actualizaciones
         exitosos = 0
