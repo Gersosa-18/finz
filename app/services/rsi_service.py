@@ -31,7 +31,7 @@ class RSIService:
         # 2. ORDER BY ... ASC NULLS FIRST: Ordena de la fecha más antigua a la más reciente. Los tickers 
         #    que no tienen registro (NULL) van primero, asegurando que se actualicen inmediatamente.
         sql_query = text("""
-            SELECT s.ticker
+            SELECT DISTINCT s.ticker
             FROM seguimiento_rsi s
             LEFT JOIN (
                 SELECT ticker, MAX(timestamp) as last_update
