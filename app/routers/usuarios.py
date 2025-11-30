@@ -43,7 +43,7 @@ def login(usuario_login: UsuarioLogin, db: Session = Depends(get_db)):
             "token_type": "bearer"
     }
 
-@usuarios_router.post('/refresh', tags=['Usuarios'])
+@usuarios_router.post('/auth/refresh', tags=['Usuarios'])
 def refresh_token(refresh_token: str = Body(..., embed=True)):
     """Renueva el access token usando un refresh"""
     try:

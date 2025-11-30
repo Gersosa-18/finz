@@ -46,7 +46,6 @@ app.include_router(notificaciones_router)
 app.include_router(rsi_router)
 # Base.metadata.create_all(bind=engine)
 
-# En main.py, agrega esto:
 
 @app.on_event("startup")
 async def startup_event():
