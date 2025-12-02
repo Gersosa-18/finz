@@ -60,6 +60,8 @@ def get_tickers_seguimiento(user_id: int = Depends(get_current_user_id), db: Ses
         try:
             info = yf.Ticker(t).info
             precio = info.get("currentPrice") or info.get("regularMarketPrice")
+            if not precio:
+                continue
             cambio = info.get("regularMarketChangePercent", 0)
             resultado.append({"symbol": t, "price": round(precio, 2), "change": round(cambio, 2)})
         except:
