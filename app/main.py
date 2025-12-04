@@ -8,6 +8,7 @@ from app.routers.usuarios import usuarios_router
 from app.routers.eventos import eventos_router
 from app.routers.notificaciones import notificaciones_router
 from app.routers.rsi import rsi_router
+from app.routers.reportes import reportes_router  
 from app.middlewares.error_handler import (
     http_exception_handler,
     general_exception_handler,
@@ -44,6 +45,7 @@ app.include_router(usuarios_router)
 app.include_router(eventos_router)
 app.include_router(notificaciones_router)
 app.include_router(rsi_router)
+app.include_router(reportes_router)
 # Base.metadata.create_all(bind=engine)
 
 

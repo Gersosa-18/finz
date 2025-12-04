@@ -7,8 +7,8 @@ class ReporteResponse(BaseModel):
     resumen_groq: str
     fecha_inicio: datetime
     fecha_fin: datetime
-    indices: List[dict]
-    sectores: List[dict]
+    indices_json: List[dict]
+    sectores_json: List[dict]
     created_at: datetime
 
     class Config:

@@ -1,6 +1,6 @@
 # app/services/weekly_data_service.py
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import yfinance as yf
 
 from typing import Dict, Optional
@@ -9,6 +9,18 @@ class WeeklyDataServices:
 
     INDICES = ["SPY", "QQQ", "DIA", "IWM"]
     SECTORES = ["XLK", "XLF", "XLE", "XLV", "XLY", "XLP", "XLI", "XLU", "XLRE", "XLB", "XLC"]
+
+    @staticmethod
+    def obtener_rango_semana_pasada() -> dict:
+        hoy = datetime.now().date()
+        dias_desde_viernes = (hoy.weekday() + 3) % 7
+        viernes = hoy - timedelta(days=dias_desde_viernes if dias_desde_viernes > 0 else 7)
+        lunes = viernes - timedelta(days=4)
+
+        return {
+            "fecha_inicio": datetime.combine(lunes, datetime.min.time()),
+            "fecha_fin": datetime.combine(viernes, datetime.min.time())
+        }
 
     @staticmethod
     def obtener_cambio_semanal(ticker: str) -> Optional[Dict]:
@@ -49,7 +61,13 @@ class WeeklyDataServices:
             resultado = WeeklyDataServices.obtener_cambio_semanal(ticker)
             if resultado:
                 sectores_data.append(resultado)
+
+        rango = WeeklyDataServices.obtener_rango_semana_pasada()
+
         return {"indices": indices_data,
                 "sectores": sectores_data,
-                "fecha_generacion": datetime.now().strftime("%Y-%m-%d")}
+                "fecha_generacion": datetime.now().strftime("%Y-%m-%d"),
+                "fecha_inicio": rango["fecha_inicio"],
+                "fecha_fin": rango["fecha_fin"] 
+        }
         
