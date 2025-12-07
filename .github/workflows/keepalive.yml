@@ -16,7 +16,7 @@ jobs:
       - name: Ping Render
         run: |
           echo "Ping Render..."
-          response=$(curl -s -w "\n%{http_code}" https://finz-api-o2iy.onrender.com/health)
+          response=$(curl -s -w "\n%{http_code}" "https://finz-api-o2iy.onrender.com/health")
           http_code=$(echo "$response" | tail -n1)
 
           echo "Response: $body"
