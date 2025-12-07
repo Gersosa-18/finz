@@ -11,6 +11,7 @@ on:
 jobs:
   ping:
     runs-on: ubuntu-latest
+    timeout-minutes: 2
 
     steps:
       - name: Ping Render
@@ -18,6 +19,7 @@ jobs:
           echo "Ping Render..."
           response=$(curl -s -w "\n%{http_code}" "https://finz-api-o2iy.onrender.com/health")
           http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
 
           echo "Response: $body"
           echo "HTTP Status: $http_code"
