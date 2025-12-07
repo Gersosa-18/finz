@@ -61,6 +61,16 @@ async def shutdown_event():
     scheduler.shutdown()
     print("🛑 Scheduler detenido")
 
+@app.get("/health")
+async def health():
+    """Endpoint para keep alive de Github Actions"""
+    from datetime import datetime
+    return {
+        "status": "ok",
+        "timestamp": datetime.now().isoformat(),
+        "scheduler_running": scheduler.running
+    }
+
 @app.get("/")
 async def root():
     return {"message": "Finz API", "status": "ok"}
