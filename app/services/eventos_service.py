@@ -10,6 +10,7 @@ from app.models.alertas import (
 from app.enums.eventos import ImpactoEvento, TipoEvento
 from datetime import date, datetime, timedelta
 import requests
+import os
 
 
 def obtener_tickers_activos(db: Session):
@@ -20,6 +21,13 @@ def obtener_tickers_activos(db: Session):
             tickers.add(alerta.ticker)
     return list(tickers)
 
+def sincronizar_eventos(db: Session):
+    api_key = os.getenv("FINNHUB_API_KEY")
+    if  not api_key:
+        return 0
+    
+    eventos_creados = sincronizar_earnings_finnhub(db, api_key)
+    return eventos_creados
 
 # def sincronizar_eventos_fmp(db: Session, fmp_key: str):
 #     """Eventos MACRO desde FMP Economics Calendar"""
