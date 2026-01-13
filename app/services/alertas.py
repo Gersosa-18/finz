@@ -146,12 +146,29 @@ class AlertasService:
                 continue
 
         for alerta in alertas_rango:
-            if alerta.activada_at:
-                continue
             try:
-                if self._evaluar_alerta_rango(alerta, cache_precios):
-                    alertas_activadas.append({"id": f"rango-{alerta.id}", "mensaje": self._generar_mensaje_rango(alerta, cache_precios)})
+                dentro_del_rango = self._evaluar_alerta_rango(alerta, cache_precios)
+
+                # ENTRADA AL RANGO
+                if dentro_del_rango and not alerta.activada_at:
+                    alertas_activadas.append({
+                        "id": f"rango-entrada-{alerta.id}",
+                        "mensaje": f"📊 {alerta.ticker} ENTRÓ al rango ${alerta.valor_minimo}-${alerta.valor_maximo}"
+                    })
                     alerta.activada_at = datetime.now()
+                # SALIDA DEL RANGO
+                elif not dentro_del_rango and alerta.activada_at:
+                    key = f"{alerta.ticker}_{alerta.campo.value}"
+                    if key not in cache_precios:
+                        cache_precios[key] = PreciosService.obtener_dato(alerta.ticker, alerta.campo)
+                    valor_actual = cache_precios.get(key, "N/A")
+                    
+                    alertas_activadas.append({
+                        "id": f"rango-salida-{alerta.id}",
+                        "mensaje": f"⚠️ {alerta.ticker} SALIÓ del rango (ahora ${valor_actual})"
+                    })
+                    alerta.activada_at = None # Resetear
+
             except HTTPException:
                 continue
 
@@ -292,7 +309,13 @@ class AlertasService:
         valor_actual = cache_precios.get(key)
         if valor_actual is None:
             return f"{alerta.ticker} {alerta.campo.value} - Precio no disponible"
-        return f"{alerta.ticker} {alerta.campo.value} (${valor_actual}) en rango ${alerta.valor_minimo}-${alerta.valor_maximo}"
+        
+        # Determinar si entró o salió
+        dentro = alerta.valor_minimo <= valor_actual <= alerta.valor_maximo
+        if dentro:
+            return f"📊 {alerta.ticker} ENTRÓ al rango ${alerta.valor_minimo}-${alerta.valor_maximo} (${valor_actual})"
+        else:
+            return f"⚠️ {alerta.ticker} SALIÓ del rango (${valor_actual})"
 
     def _generar_mensaje_porcentaje(self, alerta, cache_precios):
         key = f"{alerta.ticker}_{alerta.campo.value}"
