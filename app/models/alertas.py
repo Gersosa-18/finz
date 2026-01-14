@@ -47,7 +47,6 @@ class AlertaPorcentaje(AlertaBase):
     
     campo = Column(Enum(CampoEnum), nullable=False)
     porcentaje_cambio = Column(Float, nullable=False)  # +5.0 = subió 5%, -10.0 = bajó 10%
-    periodo = Column(String(10), default="1d")  # 1d, 1h, 1w
     precio_referencia = Column(Float, nullable=True)  # Para tracking del cambio
     
     usuario = relationship("Usuarios", backref="alertas_porcentaje")

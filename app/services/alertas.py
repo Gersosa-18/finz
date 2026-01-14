@@ -17,7 +17,7 @@ class AlertasService:
         self.db = db
 
     # ========== MÉTODOS DE CREACIÓN ESPECÍFICOS ==========
-    def crear_alerta_simple(self, alerta: AlertaSimpleCreate, user_id: int = 1):
+    def crear_alerta_simple(self, alerta: AlertaSimpleCreate, user_id: int):
         """Crear alerta simple"""
         new_alerta = AlertaSimple(
             user_id=user_id,
@@ -30,7 +30,7 @@ class AlertasService:
         self.db.commit()
         return new_alerta
 
-    def crear_alerta_rango(self, alerta: AlertaRangoCreate, user_id: int = 1):
+    def crear_alerta_rango(self, alerta: AlertaRangoCreate, user_id: int):
         """Crear alerta de rango"""
         new_alerta = AlertaRango(
             user_id=user_id,
@@ -43,7 +43,7 @@ class AlertasService:
         self.db.commit()
         return new_alerta
 
-    def crear_alerta_porcentaje(self, alerta: AlertaPorcentajeCreate, user_id: int = 1):
+    def crear_alerta_porcentaje(self, alerta: AlertaPorcentajeCreate, user_id: int):
         """Crear alerta de porcentaje"""
         # Obtener precio actual como referencia
         precio_actual = PreciosService.obtener_dato(alerta.ticker, alerta.campo)
@@ -56,14 +56,13 @@ class AlertasService:
             ticker=alerta.ticker,
             campo=alerta.campo,
             porcentaje_cambio=alerta.porcentaje_cambio,
-            periodo=alerta.periodo,
             precio_referencia=precio_actual
         )
         self.db.add(new_alerta)
         self.db.commit()
         return new_alerta
 
-    def crear_alerta_compuesta(self, alerta: AlertaCompuestaCreate, user_id: int = 1):
+    def crear_alerta_compuesta(self, alerta: AlertaCompuestaCreate, user_id: int):
         """Crear alerta compuesta"""
         new_alerta = AlertaCompuesta(
             user_id=user_id,

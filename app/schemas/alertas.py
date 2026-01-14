@@ -55,7 +55,6 @@ class AlertaPorcentajeCreate(BaseModel):
     ticker: str = Field(..., max_length=10)
     campo: CampoEnum
     porcentaje_cambio: float
-    periodo: str = "1d"
    
     @field_validator('ticker')
     def ticker_uppercase(cls, v):
