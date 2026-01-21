@@ -14,12 +14,15 @@ def test_login_demo_ok():
     assert response.status_code == 200
     assert "access_token" in response.json()
 
+
 def test_login_invalid_credentials():
     response = client.post(
         "/login",
         json={
             "correo": "demo@finz.com",
-            "contrasena": "malpassword"
+            "contrasena": "nopassword"
         }
     )
+    
     assert response.status_code == 400
+    assert response.json()["error"] == "Correo o contraseña incorrectos"
