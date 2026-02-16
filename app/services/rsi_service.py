@@ -112,9 +112,13 @@ class RSIService:
 
     @staticmethod
     def guardar_rsi(db: Session, ticker: str, rsi_value: float):
-        """Guarda RSI en BD (opcional)"""
+        """Guarda RSI en BD y elimina el anterior del mismo ticker"""
+        # Eliminar registro anterior de este ticker (sí existe)
+        db.query(RSI).filter(RSI.ticker == ticker).delete()
+        # Insertar el nuevo
         rsi_record = RSI(ticker=ticker, rsi_value=rsi_value)
         db.add(rsi_record)
+        
         db.commit()
         return rsi_record
     
