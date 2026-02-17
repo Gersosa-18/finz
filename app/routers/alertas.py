@@ -16,6 +16,7 @@ from app.utils.auth import get_current_user_id
 from app.middlewares.jwt_bearer import JWTBearer
 
 alertas_router = APIRouter()
+_cache_precios: dict = {}
 
 # Endpoints de creación por tipo
 @alertas_router.post('/simple', tags=['Alertas'], response_model=dict, status_code=201,
@@ -58,17 +59,24 @@ def get_tickers_seguimiento(user_id: int = Depends(get_current_user_id), db: Ses
     if not tickers:
         return {"tickers": []}
     
-    data = yf.download(tickers, period="1d", auto_adjust=True, progress=False)
+    try:
+        data = yf.download(tickers, period="1d", auto_adjust=True, progress=False)
+        resultado = []
+        for t in tickers:
+            try:
+                precio = float(data["Close"][t].dropna().iloc[-1])
+                apertura = float(data["Open"][t].dropna().iloc[-1])
+                cambio = round(((precio - apertura) / apertura) * 100, 2)
+                entry = {"symbol": t, "price": round(precio, 2), "change": round(cambio, 2)}
+                _cache_precios[t] = entry  # guardar éxito
+                resultado.append(entry)
+            except Exception:
+                resultado.append(_cache_precios.get(t, {"symbol": t, "price": None, "change": 0}))
 
-    resultado = []
-    for t in tickers:
-        try:
-            precio = float(data["Close"][t].dropna().iloc[-1])
-            apertura = float(data["Open"][t].dropna().iloc[-1])
-            cambio = round(((precio - apertura) / apertura) * 100, 2)
-            resultado.append({"symbol": t, "price": round(precio, 2), "change": round(cambio, 2)})
-        except:
-            continue
+    except Exception:
+        # yfinance falló del todo → usar caché
+        resultado = [_cache_precios.get(t, {"symbol": t, "price": None, "change": 0}) for t in tickers]
+            
     return {"tickers": resultado}
 
 @alertas_router.get('/mis-alertas', tags=['Alertas'])
