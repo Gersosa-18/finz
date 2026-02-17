@@ -53,16 +53,19 @@ def get_tickers_seguimiento(user_id: int = Depends(get_current_user_id), db: Ses
     import yfinance as yf
 
     alertas = AlertasService(db).obtener_alertas_usuario(user_id)
-    tickers = {a.ticker for alertas_tipo in alertas.values() for a in alertas_tipo if a.activo}
+    tickers = list({a.ticker for alertas_tipo in alertas.values() for a in alertas_tipo if a.activo})
+
+    if not tickers:
+        return {"tickers": []}
+    
+    data = yf.download(tickers, period="1d", auto_adjust=True, progress=False)
 
     resultado = []
     for t in tickers:
         try:
-            info = yf.Ticker(t).info
-            precio = info.get("currentPrice") or info.get("regularMarketPrice")
-            if not precio:
-                continue
-            cambio = info.get("regularMarketChangePercent", 0)
+            precio = float(data["Close"][t].dropna().iloc[-1])
+            apertura = float(data["Open"][t].dropna().iloc[-1])
+            cambio = round(((precio - apertura) / apertura) * 100, 2)
             resultado.append({"symbol": t, "price": round(precio, 2), "change": round(cambio, 2)})
         except:
             continue
