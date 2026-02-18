@@ -14,9 +14,9 @@ from app.schemas.alertas import (
 from app.services.alertas import AlertasService
 from app.utils.auth import get_current_user_id
 from app.middlewares.jwt_bearer import JWTBearer
-
+from app.jobs.precios_job import get_cache
 alertas_router = APIRouter()
-_cache_precios: dict = {}
+
 
 # Endpoints de creación por tipo
 @alertas_router.post('/simple', tags=['Alertas'], response_model=dict, status_code=201,
@@ -51,33 +51,11 @@ def post_crear_alerta_compuesta(alerta: AlertaCompuestaCreate, user_id: int = De
 @alertas_router.get('/tickers-seguimiento', tags=['Alertas'])
 def get_tickers_seguimiento(user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """Tickers del usuario con precios"""
-    import yfinance as yf
-
     alertas = AlertasService(db).obtener_alertas_usuario(user_id)
     tickers = list({a.ticker for alertas_tipo in alertas.values() for a in alertas_tipo if a.activo})
 
-    if not tickers:
-        return {"tickers": []}
-    
-    try:
-        data = yf.download(tickers, period="1d", auto_adjust=True, progress=False)
-        resultado = []
-        for t in tickers:
-            try:
-                precio = float(data["Close"][t].dropna().iloc[-1])
-                apertura = float(data["Open"][t].dropna().iloc[-1])
-                cambio = round(((precio - apertura) / apertura) * 100, 2)
-                entry = {"symbol": t, "price": round(precio, 2), "change": round(cambio, 2)}
-                _cache_precios[t] = entry  # guardar éxito
-                resultado.append(entry)
-            except Exception:
-                resultado.append(_cache_precios.get(t, {"symbol": t, "price": None, "change": 0}))
-
-    except Exception:
-        # yfinance falló del todo → usar caché
-        resultado = [_cache_precios.get(t, {"symbol": t, "price": None, "change": 0}) for t in tickers]
-            
-    return {"tickers": resultado}
+    cache = get_cache()
+    return {"tickers": [cache.get(t, {"symbol": t, "price": None, "change": 0}) for t in tickers]}
 
 @alertas_router.get('/mis-alertas', tags=['Alertas'])
 def get_mis_alertas(user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
