@@ -5,6 +5,7 @@ from app.jobs.rsi_job import actualizar_rsi
 from app.jobs.eventos_job import sincronizar_eventos
 from app.jobs.reportes_job import sincronizar_reportes
 from app.jobs.precios_job import actualizar_precios_cache
+from app.jobs.mag7_job import actualizar_mercado
 
 def ejecutar_job_alertas():
     db = SessionLocal()
@@ -59,3 +60,4 @@ scheduler.add_job(ejecutar_job_alertas, 'interval', minutes=5, id="job_alertas",
 scheduler.add_job(ejecutar_job_rsi, "cron", minute="*", hour="11-17", day_of_week="mon-fri")
 scheduler.add_job(ejecutar_job_eventos, "cron", hour=0, minute=0, id="job_eventos", replace_existing=True)
 scheduler.add_job(ejecutar_job_reportes, 'cron', day_of_week='sat', hour=2,minute=0, id="job_reportes", replace_existing=True)
+scheduler.add_job(actualizar_mercado, "cron", hour=18, minute=30, day_of_week="mon-fri", id="job_mercado", replace_existing=True)

@@ -15,7 +15,7 @@ engine = create_engine(
     DATABASE_URL.replace("postgresql://", "postgresql+psycopg://"),
     pool_pre_ping=True,
     pool_recycle=300,
-    pool_size=2,             
+    pool_size=3,             
     max_overflow=3, 
     pool_timeout=30,
 )

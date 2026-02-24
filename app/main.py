@@ -8,7 +8,8 @@ from app.routers.usuarios import usuarios_router
 from app.routers.eventos import eventos_router
 from app.routers.notificaciones import notificaciones_router
 from app.routers.rsi import rsi_router
-from app.routers.reportes import reportes_router  
+from app.routers.reportes import reportes_router
+from app.routers.mag7 import mag7 
 from app.middlewares.error_handler import (
     http_exception_handler,
     general_exception_handler,
@@ -46,15 +47,18 @@ app.include_router(eventos_router)
 app.include_router(notificaciones_router)
 app.include_router(rsi_router)
 app.include_router(reportes_router)
+app.include_router(mag7)
 # Base.metadata.create_all(bind=engine)
 
 
 @app.on_event("startup")
 async def startup_event():
     from app.config.database import engine, Base
+    from app.services.mag7_service import actualizar_cache
     Base.metadata.create_all(bind=engine)
     scheduler.start()
     print("🚀 Scheduler de alertas iniciado")
+    actualizar_cache()
 
 @app.on_event("shutdown") 
 async def shutdown_event():
