@@ -29,22 +29,22 @@ def suscribir_push(
     db.commit()
     return {"message": "Suscripción guardada"}
 
-@notificaciones_router.post('/enviar/{user_id}')
+@notificaciones_router.post('/enviar')
 def enviar_notificacion(
-    user_id: int,
     titulo: str = "Finz Alert",
     mensaje: str = "Nueva alerta activada",
-    db: Session = Depends(get_db)  # ← AGREGAR
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db) 
 ):
     """Enviar push notification a un usuario"""
-    suscripcion = db.query(Suscripcion).filter(Suscripcion.user_id == user_id).first()  # ← CAMBIAR
+    suscripcion = db.query(Suscripcion).filter(Suscripcion.user_id == user_id).first()  
     
-    if not suscripcion:  # ← CAMBIAR
+    if not suscripcion:  
         return {"error": "Usuario no suscrito"}
     
     try:
         webpush(
-            subscription_info=suscripcion.subscription_data,  # ← CAMBIAR
+            subscription_info=suscripcion.subscription_data,  
             data=json.dumps({"title": titulo, "body": mensaje}),
             vapid_private_key=os.getenv("VAPID_PRIVATE_KEY"),
             vapid_claims={
