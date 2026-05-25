@@ -10,6 +10,7 @@ from app.routers.notificaciones import notificaciones_router
 from app.routers.rsi import rsi_router
 from app.routers.reportes import reportes_router
 from app.routers.mag7 import mag7 
+from app.routers.analisis import analisis_router
 from app.middlewares.error_handler import (
     http_exception_handler,
     general_exception_handler,
@@ -48,6 +49,7 @@ app.include_router(notificaciones_router)
 app.include_router(rsi_router)
 app.include_router(reportes_router)
 app.include_router(mag7)
+app.include_router(analisis_router)
 # Base.metadata.create_all(bind=engine)
 
 
