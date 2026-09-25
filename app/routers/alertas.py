@@ -14,7 +14,7 @@ from app.schemas.alertas import (
 from app.services.alertas import AlertasService
 from app.utils.auth import get_current_user_id
 from app.middlewares.jwt_bearer import JWTBearer
-from app.jobs.precios_job import get_cache
+from app.jobs.precios_job import get_cache, obtener_precio_ticker
 alertas_router = APIRouter()
 
 
@@ -54,8 +54,7 @@ def get_tickers_seguimiento(user_id: int = Depends(get_current_user_id), db: Ses
     alertas = AlertasService(db).obtener_alertas_usuario(user_id)
     tickers = list({a.ticker for alertas_tipo in alertas.values() for a in alertas_tipo if a.activo})
 
-    cache = get_cache()
-    return {"tickers": [cache.get(t, {"symbol": t, "price": None, "change": 0}) for t in tickers]}
+    return {"tickers": [obtener_precio_ticker(t) for t in tickers]}
 
 @alertas_router.get('/mis-alertas', tags=['Alertas'])
 def get_mis_alertas(user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):

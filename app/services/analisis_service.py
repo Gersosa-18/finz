@@ -41,25 +41,51 @@ class AnalisisService:
     def _obtener_fundamentales(self, ticker: str) -> dict:
         try:
             info = yf.Ticker(ticker).info
-            return {
-                "nombre": info.get("longName"),
-                "sector": info.get("sector"),
-                "industria": info.get("industry"),
-                "precio_actual": info.get("currentPrice") or info.get("regularMarketPrice"),
-                "pe_ratio": info.get("trailingPE"),
-                "market_cap": info.get("marketCap"),
-                "revenue": info.get("totalRevenue"),
-                "margen_bruto": info.get("grossMargins"),
-                "max_52w": info.get("fiftyTwoWeekHigh"),
-                "min_52w": info.get("fiftyTwoWeekLow"),
-                "media_50d": info.get("fiftyDayAverage"),
-                "media_200d": info.get("twoHundredDayAverage"),
-                "volumen_promedio": info.get("averageVolume"),
-                "beta": info.get("beta"),
+            if info and ("regularMarketPrice" in info or "currentPrice" in info):
+                return {
+                    "nombre": info.get("longName"),
+                    "sector": info.get("sector"),
+                    "industria": info.get("industry"),
+                    "precio_actual": info.get("currentPrice") or info.get("regularMarketPrice"),
+                    "pe_ratio": info.get("trailingPE"),
+                    "market_cap": info.get("marketCap"),
+                    "revenue": info.get("totalRevenue"),
+                    "margen_bruto": info.get("grossMargins"),
+                    "max_52w": info.get("fiftyTwoWeekHigh"),
+                    "min_52w": info.get("fiftyTwoWeekLow"),
+                    "media_50d": info.get("fiftyDayAverage"),
+                    "media_200d": info.get("twoHundredDayAverage"),
+                    "volumen_promedio": info.get("averageVolume"),
+                    "beta": info.get("beta"),
+                }
+        except Exception:
+            pass
 
+        # Fallback resiliente usando fast_info y PreciosService (sin requerir Yahoo Crumb)
+        try:
+            from app.services.precios_service import PreciosService
+            precio_info = PreciosService.obtener_precio_completo(ticker)
+            t = yf.Ticker(ticker)
+            fi = getattr(t, "fast_info", None)
+
+            return {
+                "nombre": ticker,
+                "sector": "N/D",
+                "industria": "N/D",
+                "precio_actual": precio_info.get("price"),
+                "pe_ratio": None,
+                "market_cap": getattr(fi, "market_cap", None),
+                "revenue": None,
+                "margen_bruto": None,
+                "max_52w": getattr(fi, "year_high", None),
+                "min_52w": getattr(fi, "year_low", None),
+                "media_50d": getattr(fi, "fifty_day_average", None),
+                "media_200d": getattr(fi, "two_hundred_day_average", None),
+                "volumen_promedio": getattr(fi, "three_month_average_volume", None) or precio_info.get("volume"),
+                "beta": None,
             }
         except Exception as e:
-            return {"error": f"No se pudieron obtener fundamentales_ {e}"}
+            return {"error": f"No se pudieron obtener fundamentales: {e}"}
         
     def _agente_tecnico(self, imagen_base64: str, media_type: str, ticker: str, timeframe: str) -> str:
         completion = self.client.chat.completions.create(

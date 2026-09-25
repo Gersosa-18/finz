@@ -62,10 +62,16 @@ app.include_router(analisis_router)
 async def startup_event():
     from app.config.database import engine, Base
     from app.services.mag7_service import actualizar_cache
+    from app.jobs.precios_job import actualizar_precios_cache
     Base.metadata.create_all(bind=engine)
     scheduler.start()
     print("🚀 Scheduler de alertas iniciado")
     actualizar_cache()
+    try:
+        actualizar_precios_cache()
+        print("📈 Caché inicial de precios cargado")
+    except Exception as e:
+        print(f"⚠️ Error cargando caché inicial de precios: {e}")
 
 @app.on_event("shutdown") 
 async def shutdown_event():
