@@ -23,13 +23,18 @@ app = FastAPI()
 app.title = "Finz API"
 app.version = "1.0.0"
 
+allowed_origins = [url.strip().rstrip("/") for url in FRONTEND_URL.split(",") if url.strip()]
+if "http://localhost:3000" not in allowed_origins:
+    allowed_origins.append("http://localhost:3000")
+
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL],
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Error handlers

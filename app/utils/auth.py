@@ -1,5 +1,5 @@
 # finz/app/utils/auth.py
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPAuthorizationCredentials
 from app.middlewares.jwt_bearer import JWTBearer
 from datetime import datetime, timedelta, timezone
@@ -48,8 +48,13 @@ def verificar_refresh_token(token: str) -> dict:
         )
     
 def get_current_user_id(
-        credentials: HTTPAuthorizationCredentials = Depends(JWTBearer())
+    request: Request,
+    credentials: HTTPAuthorizationCredentials = Depends(JWTBearer())
 ) -> int:
-    """Dependencia para obtener el user_id del token JWT"""
+    """Dependencia optimizada para obtener user_id sin re-decodificar JWT"""
+    payload = getattr(request.state, "jwt_payload", None)
+    if payload and "user_id" in payload:
+        return int(payload["user_id"])
+    
     jwt_bearer = JWTBearer()
     return jwt_bearer.get_user_id_from_token(credentials.credentials)
