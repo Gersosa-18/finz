@@ -1,3 +1,4 @@
+import logging
 from apscheduler.schedulers.background import BackgroundScheduler
 from app.config.database import SessionLocal
 from app.jobs.alertas_job import evaluar_alertas
@@ -7,6 +8,8 @@ from app.jobs.reportes_job import sincronizar_reportes
 from app.jobs.precios_job import actualizar_precios_cache
 from app.jobs.mag7_job import actualizar_mercado
 
+logger = logging.getLogger(__name__)
+
 def ejecutar_job_alertas():
     db = SessionLocal()
     try: 
@@ -14,7 +17,7 @@ def ejecutar_job_alertas():
         db.commit()
     except Exception as e:
         db.rollback()
-        print(f"Error en job de alertas: {e}")
+        logger.error(f"Error en job de alertas: {e}", exc_info=True)
     finally:
         db.close()
 
@@ -56,7 +59,7 @@ scheduler = BackgroundScheduler(timezone='America/Argentina/Buenos_Aires')
 
 # Alertas cada 5 min
 scheduler.add_job(actualizar_precios_cache, 'interval', minutes=1, id="job_precios", max_instances=1, replace_existing=True)
-scheduler.add_job(ejecutar_job_alertas, 'interval', minutes=5, id="job_alertas", replace_existing=True)
+scheduler.add_job(ejecutar_job_alertas, 'interval', minutes=5, id="job_alertas", max_instances=1, coalesce=True, replace_existing=True)
 # scheduler.add_job(ejecutar_job_rsi, "cron", minute="*", hour="11-17", day_of_week="mon-fri")
 scheduler.add_job(ejecutar_job_eventos, "cron", hour=0, minute=0, id="job_eventos", replace_existing=True)
 scheduler.add_job(ejecutar_job_reportes, 'cron', day_of_week='sat', hour=2,minute=0, id="job_reportes", replace_existing=True)
