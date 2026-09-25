@@ -21,7 +21,7 @@ def heartbeat(credentials: HTTPAuthorizationCredentials = Depends(JWTBearer())):
 def login(usuario_login: UsuarioLogin, db: Session = Depends(get_db)):
     """Login y obtención de tokens"""
     service = UsuariosService(db)
-    usuario = UsuariosService(db).obtener_usuario_por_correo(usuario_login.correo)
+    usuario = service.obtener_usuario_por_correo(usuario_login.correo)
 
     if not usuario or not service.verificar_password(
         usuario_login.contrasena.get_secret_value(),

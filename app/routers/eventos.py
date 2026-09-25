@@ -14,7 +14,7 @@ import os
 eventos_router = APIRouter(prefix="/eventos", tags=["eventos"])
 
 
-@eventos_router.get("/mis-eventos", dependencies=[Depends(JWTBearer())])
+@eventos_router.get("/mis-eventos")
 def mis_eventos(
     user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)
 ):
